@@ -1,0 +1,28 @@
+{
+  "name": "sat-miner",
+  "version": "0.0.1",
+  "description": "Rare sat miner using OrdinalsBot API",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha",
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ordinalsbot/sat-miner.git"
+  },
+  "author": "OrdinalsBot",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ordinalsbot/sat-miner/issues"
+  },
+  "homepage": "https://github.com/ordinalsbot/sat-miner#readme",
+  "dependencies": {
+    "@slack/webhook": "^7.0.2",
+    "bitcoin-core": "^4.2.0",
+    "dotenv": "^16.4.5",
+    "ordinalsbot": "^0.1.4",
+    "sinon": "^17.0.1",
+    "tiny-secp256k1": "^2.2.3"
+  }
+}

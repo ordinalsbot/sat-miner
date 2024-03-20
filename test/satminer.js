@@ -250,10 +250,72 @@ describe('Satminer', () => {
       assert(sendTxSpy.notCalled);
     });
 
-    it('should finish quietly when address is empty', async () => {
+    it('should throw if any funds go to non-user controlled addresses', async () => {
+      const scanner = new Satscanner();
       const mockSatExtractorApiResponse = {
-        error: "Address is empty, no ranges found.",
-        status: 500,
+        "specialRanges": [
+        ],
+        tx: "0200000001d5b5988233d85b9c2979caec147800b365e20a1611ee6baa7b569d2e5ce76f820000000000fdffffff011f1700000000000016001402b3df8c029274deabfac0ace62f9fddae7dbfca00000000"
+      };
+      const fastestFee = 20;
+      const mockFeeEst = {
+        fastestFee,
+        halfHourFee: 20,
+        hourFee: 15,
+        economyFee: 10,
+        minimumFee: 8,
+      };
+
+      const mockMempoolApi = new MempoolApi();
+      sinon.stub(mockMempoolApi, 'getFeeEstimation').resolves(mockFeeEst);
+
+      const minDepositAmount = 0.005;
+      const txid = 'sometxid';
+      const inventoryWallet = 'inventorywalletaddr';
+      const krakenDepoAddr = 'krakendepoaddr';
+      const randomAddress = 'some_random_address';
+      const walletBalance = 1;
+      const confirmationTargetBlocks = 2;
+      const mockWallet = new Wallet(null, mockMempoolApi);
+      sinon.stub(mockWallet, 'getBalance').resolves(walletBalance);
+      const stubExtract = sinon.stub(satextractor, 'extract').resolves(mockSatExtractorApiResponse);
+      const sendTxSpy = sinon.stub(mockWallet, 'sendRawTransaction').resolves(txid);
+      const decodeRawTxSpy = sinon.stub(mockWallet, 'decodeRawTransaction').resolves({ vout: [{ scriptPubKey: { address: randomAddress, value: 0.01 }}, { scriptPubKey: { address: krakenDepoAddr, value: 0.02 }} ] });
+      const signRawTxSpy = sinon.stub(mockWallet, 'signRawTransaction').resolves('signedtx');
+
+      satminer = new Satminer(
+        mockWallet,
+        scanner,
+        satextractor,
+        tumblerAddress,
+        inventoryWallet,
+        krakenDepoAddr,
+        confirmationTargetBlocks,
+        minDepositAmount,
+      );
+
+      await assert.rejects(async () => satminer.extractSatsAndRotateFunds(), { message: 'not all outputs are user-controlled' });
+
+      assert(stubExtract.calledOnce);
+      assert(stubExtract.calledWith({
+        scanAddress: tumblerAddress,
+        addressToSendSpecialSats: inventoryWallet,
+        addressToSendCommonSats: krakenDepoAddr,
+        feePerByte: mockFeeEst.fastestFee,
+      }));
+      assert(decodeRawTxSpy.calledOnce);
+      assert(decodeRawTxSpy.calledWith(mockSatExtractorApiResponse.tx));
+      assert(signRawTxSpy.notCalled);
+      assert(signRawTxSpy.notCalled);
+      assert(sendTxSpy.notCalled);
+      assert(sendTxSpy.notCalled);
+    });
+
+    it('should finish quietly when address is empty', async () => {
+      const mockSatExtractorApiResponse = { 
+        specialRanges: [], 
+        tx: null, 
+        message: 'Address is empty' ,
       };
       const fastestFee = 99;
       const mockFeeEst = {
@@ -265,7 +327,7 @@ describe('Satminer', () => {
       };
 
       sinon.stub(wallet, 'estimateFee').resolves(mockFeeEst);
-      const stubExtract = sinon.stub(satextractor, 'extract').throws(mockSatExtractorApiResponse);
+      const stubExtract = sinon.stub(satextractor, 'extract').resolves(mockSatExtractorApiResponse);
       const sendTxSpy = sinon.stub(wallet, 'sendRawTransaction').resolves('txid');
       const decodeRawTxSpy = sinon.stub(wallet, 'decodeRawTransaction').resolves({ vout: [{ scriptPubKey: { address: tumblerAddress } }] });
       const signRawTxSpy = sinon.stub(wallet, 'signRawTransaction').resolves('signedtx');

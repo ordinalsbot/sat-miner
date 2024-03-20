@@ -1,4 +1,5 @@
-# UNTESTED - DO NOT RUN!
+# Caution
+This is experimental software, doing experimental things with magic internet money. There can be bugs and your bitcoin can be lost.
 
 # OrdinalsBot Sat Miner
 Rare sat miner using OrdinalsBot API.

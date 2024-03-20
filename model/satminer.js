@@ -156,19 +156,11 @@ class Satminer {
     }
 
     console.log('satextractorParams', satextractorParams)
-    let specialRanges, tx, error;
-    try {
-      const satextractorRes = await this.satExtractorClient.extract(satextractorParams);
-      console.log('satextractorRes', satextractorRes);
-      ({ specialRanges, tx } = satextractorRes);
-    } catch (e) {
-      console.error('error calling satextractor', e.status, e.message);
-      if (e.status === 500) {
-        error = 'Address is empty, no ranges found.';
-      }
-    }
+    const satextractorRes = await this.satExtractorClient.extract(satextractorParams);
+    console.log('satextractorRes', satextractorRes);
+    const { specialRanges, tx, message } = satextractorRes;
 
-    if (error && error.includes('Address is empty')) {
+    if (message && message.includes('Address is empty')) {
       console.log('tumbler wallet is empty');
       return false;
     } else if (specialRanges.length === 0) {

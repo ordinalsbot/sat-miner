@@ -15,7 +15,7 @@ class Satminer {
    * @param {Satextractor} satExtractorClient - the sat extractor client
    * @param {string} tumblerAddress - where we check if we have received rare sats
    * @param {string} addressSpecialSats - forward only the rare sats here, this is the default wallet
-   * @param {string} addressCommonSats - the deposit address for the kraken account
+   * @param {string} addressCommonSats - the deposit address for the exchange account
    * @param {number} feePerByte - the transaction fee in sats for sending out rare sats
    * @param {number} sweepConfirmationTargetBlocks - confirmation target for sweeping the wallet back to the exchnage account
    * @param {number} minDepositAmount - minimum amount needed to send a deposit to exchange account
@@ -178,11 +178,17 @@ class Satminer {
 
     // decode tx and check that all outputs are going to user-controlled addresses
     const decodedTransaction = await this.wallet.decodeRawTransaction(tx);
-    console.log('decodedTransaction', decodedTransaction);
+    console.log('decodedTransaction', JSON.stringify(decodedTransaction));
     const outputsNok = decodedTransaction.vout.find((output) => !this.userControlledAddresses.includes(output.scriptPubKey.address));
     console.log('outputsNok', outputsNok, this.userControlledAddresses);
     if (outputsNok) {
       throw new Error('not all outputs are user-controlled');
+    }
+
+    // check that what we are depositing to exchange is more than minDepositAmount
+    const exchangeOutput = decodedTransaction.vout.find((output) => output.scriptPubKey.address === this.addressCommonSats);
+    if (exchangeOutput.scriptPubKey.value < this.minDepositAmount) {
+      throw new Error('deposit amount is less than minDepositAmount');
     }
 
     const signedTx = await this.wallet.signRawTransaction(tx);

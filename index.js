@@ -75,7 +75,6 @@ const satminer = new Satminer(
   TUMBLER_ADDRESS,
   INVENTORY_WALLET,
   ACTIVE_EXCHANGE === 'kraken' ? KRAKEN_DEPOSIT_WALLET : OKCOIN_DEPOSIT_WALLET,
-  MIN_OUTPUT_SIZE,
   sweepConfirmationTargetBlocks,
   MIN_DEPOSIT_AMOUNT,
   slackWebHook,

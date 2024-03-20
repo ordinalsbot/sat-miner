@@ -144,16 +144,29 @@ class Satminer {
       throw new Error(`fee higher than max allowed ${this.maxFeeAllowed}`);
     }
 
-    const satextractorRes = await this.satExtractorClient.extract({
+    const satextractorParams = {
       scanAddress: this.tumblerAddress,
       addressToSendSpecialSats: this.addressSpecialSats,
       addressToSendCommonSats: this.addressCommonSats,
       feePerByte: fastestFee,
-      filterSatributes: this.includeSatributes,
-    });
-    console.log('satextractorRes', satextractorRes);
+    };
 
-    const { specialRanges, tx, error } = satextractorRes;
+    if (this.includeSatributes) {
+      satextractorParams.filterSatributes = this.includeSatributes;
+    }
+
+    console.log('satextractorParams', satextractorParams)
+    let specialRanges, tx, error;
+    try {
+      const satextractorRes = await this.satExtractorClient.extract(satextractorParams);
+      console.log('satextractorRes', satextractorRes);
+      ({ specialRanges, tx } = satextractorRes);
+    } catch (e) {
+      console.error('error calling satextractor', e.status, e.message);
+      if (e.status === 500) {
+        error = 'Address is empty, no ranges found.';
+      }
+    }
 
     if (error && error.includes('Address is empty')) {
       console.log('tumbler wallet is empty');
@@ -174,6 +187,7 @@ class Satminer {
 
     const signedTx = await this.wallet.signRawTransaction(tx);
     const txid = await this.wallet.sendRawTransaction(signedTx);
+    console.log('sent txid', txid);
 
     if (specialRanges.length > 0) {
       const rangeSummary = this.specialRangesSummary(specialRanges);

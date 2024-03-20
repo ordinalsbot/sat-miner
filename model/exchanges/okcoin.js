@@ -62,7 +62,7 @@ class OkcoinTumbler {
       return false;
     }
 
-    console.log('succeful withdrawal from okcoin', res.result);
+    console.log('successful withdrawal from okcoin');
     return true;
   };
 }

@@ -24,9 +24,17 @@ npm i
 `npm run start`  
 
 # Monitor
-* you can bookmark your miner, exchange and rare sat collection address page on http://mempool.space and see funds move between them.
+* receive slack webhooks or telegram chat messages (email coming soon...) for updates on activity of your funds.
 
-* receive slack webhooks (telegram/email coming soon...) for updates on activity of your funds.
+## Setup Telegram
+1- Visit BotFather on telegram, create a new bot and get bot token.  
+2- Add this TELEGRAM_BOT_TOKEN to `utils/init_telegram.js` script and run it.  
+`node utils/init_telegram.js`  
+3- copy the logged TELEGRAM_CHAT_ID and add both of these secrets to your `.env` file.
+
+## Setup Slack
+1- Visit your Slack App Directory, search and install `Incoming WebHooks` app to a channel.
+2- Copy your Slack Webhook URL and add it to your `.env` file. 
 
 # Contact
 * Please open an issue if you run into any problems with this repository.

@@ -1,6 +1,6 @@
-const { IncomingWebhook } = require('@slack/webhook');
 const { Satscanner, Satextractor } = require('ordinalsbot');
 const Wallet = require('./wallet');
+const NotificationService = require('./notifications/notificationService');
 
 class Satminer {
   /**
@@ -19,7 +19,7 @@ class Satminer {
    * @param {number} feePerByte - the transaction fee in sats for sending out rare sats
    * @param {number} sweepConfirmationTargetBlocks - confirmation target for sweeping the wallet back to the exchnage account
    * @param {number} minDepositAmount - minimum amount needed to send a deposit to exchange account
-   * @param {IncomingWebhook} slackWebHook - slack webhook for sending notifications
+   * @param {NotificationService} notificationService - notification service for sending updates
    * @param {string[]} includeSatributes - array of satributes to include for extraction
    * @param {RareSatWallet[]} customRareSatsWallets - array of custom rare sats wallets ranked by priority
    */
@@ -32,7 +32,7 @@ class Satminer {
     addressCommonSats,
     sweepConfirmationTargetBlocks = 1,
     minDepositAmount = 0.00015,
-    slackWebHook = null,
+    notificationService = null,
     includeSatributes = null,
     customRareSatsWallets = [],
   ) {
@@ -44,7 +44,7 @@ class Satminer {
     this.addressCommonSats = addressCommonSats;
     this.sweepConfirmationTargetBlocks = sweepConfirmationTargetBlocks;
     this.minDepositAmount = minDepositAmount;
-    this.slackWebHook = slackWebHook;
+    this.notificationService = notificationService;
     this.includeSatributes = includeSatributes;
     this.customRareSatsWallets = customRareSatsWallets;
     this.maxFeeAllowed = 1000;
@@ -123,18 +123,6 @@ class Satminer {
 
   specialRangesSummary = (specialRanges) => specialRanges.map((range) => `${range.size} x ${range.satributes.join(', ')}`).join('\n');
 
-  sendSlackMessage = async (message) => {
-    if (this.slackWebHook) {
-      await this.slackWebHook.send({
-        username: 'satminer',
-        icon_emoji: ':robot_face:',
-        text: message,
-      });
-      return true;
-    }
-    return false;
-  };
-
   extractSatsAndRotateFunds = async () => {
     console.log('scanning for rare sats...');
 
@@ -189,7 +177,7 @@ class Satminer {
 
     if (specialRanges.length > 0) {
       const rangeSummary = this.specialRangesSummary(specialRanges);
-      await this.sendSlackMessage(`found and extracted special ranges in ${txid}\n${rangeSummary}`);
+      this.notificationService.sendMessage(`found and extracted special ranges in ${txid}\n${rangeSummary}`);
     }
 
     return txid;

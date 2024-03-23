@@ -58,11 +58,13 @@ class OkcoinTumbler {
     console.log('response from okcoin', res);
 
     if (res.msg) {
+      this.notificationService.sendMessage('stopped: error calling okcoin api', 'verbose');
       console.error('error calling okcoin api', res.msg);
       return false;
     }
 
     console.log('successful withdrawal from okcoin');
+    this.notificationService.sendMessage(`successful withdrawal ${withdrawalAmount} ${this.withdrawCurrency} to wallet ${this.withdrawWallet}`, 'verbose');
     return true;
   };
 }

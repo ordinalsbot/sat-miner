@@ -49,10 +49,12 @@ class KrakenTumbler {
       withdrawalAmount,
     );
     if (res.error.length > 0) {
+      this.notificationService.sendMessage('stopped: error calling kraken api', 'verbose');
       console.error('error calling kraken api', res.error);
       return false;
     }
 
+    this.notificationService.sendMessage(`successful withdrawal ${withdrawalAmount} ${this.withdrawCurrency} to wallet ${this.withdrawWallet}`, 'verbose');
     console.log('succeful withdrawal from kraken', res.result);
 
     return true;

@@ -81,53 +81,6 @@ class Wallet {
   );
 
   /**
-   * create a raw bitcoin transaction manually,
-   * instead of using bitcoind createrawtransaction.
-   * This is needed because bitcoind does not support
-   * having duplicate output addresses.
-   * @param {Input[]} inputs - Array of inputs
-   * @param {Output[]} outputs - Input object
-   * @param {string[]} inputsRawTx - Array of raw transactions
-   * @returns {string} Raw transaction hex
-   *
-   * // Inputs and outputs arrays
-   *  const inputs = [
-   *    { hash: 'transactionId1', index: 0 },
-   *    { hash: 'transactionId2', index: 1 }
-   *  ];
-   *  const outputs = [
-   *    { address: address1, value: amount1 },
-   *    { address: address2, value: amount2 }
-   *  ];
-   */
-  createRawTransaction = (inputs, outputs, inputsRawTx = null) => {
-    // Without this sending to taproot addresses is failing
-    bitcoinjs.initEccLib(ecc);
-
-    const { network } = this;
-    const txb = new bitcoinjs.Psbt({ network });
-
-    inputs.forEach((input, i) => {
-      const x = {
-        ...input,
-        sequence: bitcoinjs.Transaction.DEFAULT_SEQUENCE - 2, // Enable RBF
-      };
-
-      // Add the raw transaction if it exists
-      if (inputsRawTx) {
-        x.nonWitnessUtxo = Buffer.from(inputsRawTx[i], 'hex');
-      }
-
-      txb.addInput(x);
-    });
-    outputs.forEach((output) => txb.addOutput({ ...output }));
-
-    // Build the transaction
-    const tx = txb.data.globalMap.unsignedTx.toBuffer().toString('hex');
-    return tx;
-  };
-
-  /**
    * @param {Input[]} inputs - the inputs
    * @param {Output[]} outputs - the outputs
    * @returns {Promise<string>} - the raw transaction hex
@@ -160,31 +113,6 @@ class Wallet {
   };
 
   sendRawTransaction = async (signedTx) => this.bitcoinClient.sendRawTransaction(signedTx);
-
-  /**
-   *
-   * @typedef {object} Input
-   * @property {string} hash - Transaction hash
-   * @property {number} index - Transaction index
-   * @typedef {object} Output
-   * @property {string} address - Address
-   * @property {number} value - Value in satoshis
-   * @param {Input[]} inputs - Array of inputs
-   * @param {Output[]} outputs - Input object
-   * @returns {Promise<string>} txId - Transaction id
-   */
-  sendCustomTransaction = async (inputs, outputs) => {
-    // Create raw transaction
-    const rawTx = await this.createUnsignedHexTransaction(inputs, outputs);
-
-    // Sign raw transaction
-    const signedTx = await this.signRawTransaction(rawTx);
-
-    // Send raw transaction
-    const txId = await this.sendRawTransaction(signedTx);
-
-    return txId;
-  };
 
   decodeRawTransaction = async (rawTx) => this.bitcoinClient.decodeRawTransaction(rawTx);
 }

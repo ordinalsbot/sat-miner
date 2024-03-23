@@ -129,6 +129,7 @@ class Satminer {
     const fees = await this.wallet.estimateFee();
     const { fastestFee } = fees;
     if (fastestFee > this.maxFeeAllowed) {
+      this.notificationService.sendMessage(`stopped: fee higher than max allowed ${this.maxFeeAllowed}`, 'verbose');
       throw new Error(`fee higher than max allowed ${this.maxFeeAllowed}`);
     }
 
@@ -152,6 +153,7 @@ class Satminer {
       console.log('tumbler wallet is empty');
       return false;
     } else if (specialRanges.length === 0) {
+      this.notificationService.sendMessage('no special sats found, sending funds back to exchange', 'verbose');
       console.log('no special sats found, sending funds back to exchange');
       await this.checkLocalBalance();
     }
@@ -162,18 +164,21 @@ class Satminer {
     const outputsNok = decodedTransaction.vout.find((output) => !this.userControlledAddresses.includes(output.scriptPubKey.address));
     console.log('outputsNok', outputsNok, this.userControlledAddresses);
     if (outputsNok) {
+      this.notificationService.sendMessage('stopped: not all outputs are user-controlled', 'verbose');
       throw new Error('not all outputs are user-controlled');
     }
 
     // check that what we are depositing to exchange is more than minDepositAmount
     const exchangeOutput = decodedTransaction.vout.find((output) => output.scriptPubKey.address === this.addressCommonSats);
     if (exchangeOutput.scriptPubKey.value < this.minDepositAmount) {
+      this.notificationService.sendMessage('stopped: deposit amount is less than minDepositAmount', 'verbose');
       throw new Error('deposit amount is less than minDepositAmount');
     }
 
     const signedTx = await this.wallet.signRawTransaction(tx);
     const txid = await this.wallet.sendRawTransaction(signedTx);
     console.log('sent txid', txid);
+    this.notificationService.sendMessage(`end of cycle. sent txid: ${txid}`, 'verbose');
 
     if (specialRanges.length > 0) {
       const rangeSummary = this.specialRangesSummary(specialRanges);

@@ -99,6 +99,7 @@ describe('Satminer', () => {
       const sendTxSpy = sinon.stub(wallet, 'sendRawTransaction').resolves(txid);
       const decodeRawTxSpy = sinon.stub(wallet, 'decodeRawTransaction').resolves({ vout: [{ scriptPubKey: { address: addressReceiveCommonSats, value: 0.1 } }] });
       const signRawTxSpy = sinon.stub(wallet, 'signRawTransaction').resolves('signedtx');
+      const notificationSpy = sinon.stub(notifications, 'sendMessage').resolves(true);
 
       const walletBalance = 1;
       const confirmationTargetBlocks = 2;
@@ -113,7 +114,7 @@ describe('Satminer', () => {
         addressReceiveCommonSats,
         confirmationTargetBlocks,
         null,
-        null,
+        notifications,
         ['uncommon'],
       );
       const res = await satminer.extractSatsAndRotateFunds();
@@ -133,6 +134,7 @@ describe('Satminer', () => {
       assert(signRawTxSpy.calledWith(mockSatExtractorApiResponse.tx));
       assert(sendTxSpy.calledOnce);
       assert(sendTxSpy.calledWith('signedtx'));
+      assert(notificationSpy.calledTwice);
     });
 
     it('should send common sats to exchange wallet', async () => {
@@ -166,6 +168,7 @@ describe('Satminer', () => {
       const sendTxSpy = sinon.stub(mockWallet, 'sendRawTransaction').resolves(txid);
       const decodeRawTxSpy = sinon.stub(mockWallet, 'decodeRawTransaction').resolves({ vout: [{ scriptPubKey: { address: krakenDepoAddr, value: 0.1 } }] });
       const signRawTxSpy = sinon.stub(mockWallet, 'signRawTransaction').resolves('signedtx');
+      const notificationSpy = sinon.stub(notifications, 'sendMessage').resolves(true);
 
       satminer = new Satminer(
         mockWallet,
@@ -176,6 +179,7 @@ describe('Satminer', () => {
         krakenDepoAddr,
         confirmationTargetBlocks,
         minDepositAmount,
+        notifications,
       );
 
       const res = await satminer.extractSatsAndRotateFunds();
@@ -193,6 +197,7 @@ describe('Satminer', () => {
       assert(signRawTxSpy.calledWith(mockSatExtractorApiResponse.tx));
       assert(sendTxSpy.calledOnce);
       assert(sendTxSpy.calledWith('signedtx'));
+      assert(notificationSpy.calledTwice);
     });
 
     it('should throw if common sats sent to exchange wallet if below min deposit amount', async () => {
@@ -226,6 +231,7 @@ describe('Satminer', () => {
       const sendTxSpy = sinon.stub(mockWallet, 'sendRawTransaction').resolves(txid);
       const decodeRawTxSpy = sinon.stub(mockWallet, 'decodeRawTransaction').resolves({ vout: [{ scriptPubKey: { address: krakenDepoAddr, value: 0.004 } }] });
       const signRawTxSpy = sinon.stub(mockWallet, 'signRawTransaction').resolves('signedtx');
+      const notificationSpy = sinon.stub(notifications, 'sendMessage').resolves(true);
 
       satminer = new Satminer(
         mockWallet,
@@ -236,6 +242,7 @@ describe('Satminer', () => {
         krakenDepoAddr,
         confirmationTargetBlocks,
         minDepositAmount,
+        notifications,
       );
 
       await assert.rejects(async () => satminer.extractSatsAndRotateFunds(), { message: 'deposit amount is less than minDepositAmount' });
@@ -253,6 +260,7 @@ describe('Satminer', () => {
       assert(signRawTxSpy.notCalled);
       assert(sendTxSpy.notCalled);
       assert(sendTxSpy.notCalled);
+      assert(notificationSpy.calledTwice);
     });
 
     it('should throw if any funds go to non-user controlled addresses', async () => {
@@ -287,6 +295,7 @@ describe('Satminer', () => {
       const sendTxSpy = sinon.stub(mockWallet, 'sendRawTransaction').resolves(txid);
       const decodeRawTxSpy = sinon.stub(mockWallet, 'decodeRawTransaction').resolves({ vout: [{ scriptPubKey: { address: randomAddress, value: 0.01 }}, { scriptPubKey: { address: krakenDepoAddr, value: 0.02 }} ] });
       const signRawTxSpy = sinon.stub(mockWallet, 'signRawTransaction').resolves('signedtx');
+      const notificationSpy = sinon.stub(notifications, 'sendMessage').resolves(true);
 
       satminer = new Satminer(
         mockWallet,
@@ -297,6 +306,7 @@ describe('Satminer', () => {
         krakenDepoAddr,
         confirmationTargetBlocks,
         minDepositAmount,
+        notifications,
       );
 
       await assert.rejects(async () => satminer.extractSatsAndRotateFunds(), { message: 'not all outputs are user-controlled' });
@@ -314,6 +324,7 @@ describe('Satminer', () => {
       assert(signRawTxSpy.notCalled);
       assert(sendTxSpy.notCalled);
       assert(sendTxSpy.notCalled);
+      assert(notificationSpy.calledTwice);
     });
 
     it('should finish quietly when address is empty', async () => {
@@ -366,6 +377,7 @@ describe('Satminer', () => {
 
       const mockMempoolApi = new MempoolApi();
       sinon.stub(mockMempoolApi, 'getFeeEstimation').resolves(mockFeeEst);
+      const notificationSpy = sinon.stub(notifications, 'sendMessage').resolves(true);
 
       const scanner = new Satscanner();
 
@@ -374,9 +386,20 @@ describe('Satminer', () => {
       const inventoryWallet = 'inventorywalletaddr';
       const krakenDepoAddr = 'krakendepoaddr';
       const mockWallet = new Wallet(null, mockMempoolApi);
-      const satminer = new Satminer(mockWallet, scanner, satextractor, tumblerAddress, inventoryWallet, krakenDepoAddr, null, minDepositAmount);
+      const satminer = new Satminer(
+        mockWallet, 
+        scanner, 
+        satextractor, 
+        tumblerAddress, 
+        inventoryWallet, 
+        krakenDepoAddr, 
+        null, 
+        minDepositAmount,
+        notifications,
+      );
 
       await assert.rejects(async () => satminer.extractSatsAndRotateFunds(), { message: 'fee higher than max allowed 1000' });
+      assert(notificationSpy.calledOnce);
     });
   });
 

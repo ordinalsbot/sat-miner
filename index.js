@@ -29,6 +29,7 @@ const {
   CUSTOM_SPECIAL_SAT_WALLETS,
   ORDINALSBOT_API_KEY,
   INCLUDE_SATRIBUTES,
+  NOTIFICATION_LEVEL,
 } = require('./conf/satminer');
 const NotificationService = require('./model/notifications/notificationService');
 const SlackNotifications = require('./model/notifications/slack');
@@ -51,7 +52,7 @@ const satextractor = new Satextractor(ORDINALSBOT_API_KEY, "live");
 const mempool = new Mempool(ORDINALSBOT_API_KEY, "live");
 
 // initialize notifications
-let notifications = new NotificationService();
+let notifications = new NotificationService(NOTIFICATION_LEVEL);
 if (SLACK_WEB_HOOK) {
   console.log('enabling slack webhook notifications');
   const slackWebHook = new SlackNotifications(SLACK_WEB_HOOK);

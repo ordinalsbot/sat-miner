@@ -144,6 +144,8 @@ if (!INCLUDE_SATRIBUTES) {
   console.log('only these satributes will be extracted!');
 }
 
+const { NOTIFICATION_LEVEL = 'info' } = process.env;
+
 // The wallets will be loaded from ENV by priority from top to bottom
 const RARE_SAT_KNOWN_TYPES = [
   'uncommon',
@@ -194,4 +196,5 @@ module.exports = {
   INCLUDE_SATRIBUTES,
   MIN_OUTPUT_SIZE,
   CUSTOM_SPECIAL_SAT_WALLETS,
+  NOTIFICATION_LEVEL,
 };

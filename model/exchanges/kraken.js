@@ -1,4 +1,5 @@
 const KrakenAPI = require('../../api/kraken');
+const NotificationService = require('../notifications/notificationService');
 
 /**
  * Rotates funds from a Kraken account
@@ -6,6 +7,7 @@ const KrakenAPI = require('../../api/kraken');
 class KrakenTumbler {
   /**
    * @param {KrakenAPI} krakenClient
+   * @param {NotificationService} notificationService
    * @param {number} minWithdrawalAmount
    * @param {number} maxWithdrawalAmount
    * @param {string} withdrawWallet
@@ -13,12 +15,14 @@ class KrakenTumbler {
    */
   constructor(
     krakenClient,
+    notificationService,
     minWithdrawalAmount,
     maxWithdrawalAmount,
     withdrawWallet,
     withdrawCurrency,
   ) {
     this.krakenClient = krakenClient;
+    this.notificationService = notificationService;
     this.minWithdrawalAmount = minWithdrawalAmount;
     this.maxWithdrawalAmount = maxWithdrawalAmount;
     this.withdrawWallet = withdrawWallet;

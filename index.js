@@ -100,6 +100,7 @@ switch (ACTIVE_EXCHANGE) {
         const krakenAPI = new KrakenAPI(KRAKEN_API_KEY, KRAKEN_API_SECRET);
         exchangeTumbler = new KrakenTumbler(
             krakenAPI,
+            notifications,
             MIN_WITHDRAWAL_AMOUNT,
             MAX_WITHDRAWAL_AMOUNT,
             KRAKEN_WITHDRAWAL_WALLET,
@@ -110,6 +111,7 @@ switch (ACTIVE_EXCHANGE) {
         const okcoinAPI = new OkcoinAPI(OKCOIN_API_KEY, OKCOIN_API_SECRET, OKCOIN_API_PASSPHRASE);
         exchangeTumbler = new OkcoinTumbler(
             okcoinAPI,
+            notifications,
             MIN_WITHDRAWAL_AMOUNT,
             MAX_WITHDRAWAL_AMOUNT,
             OKCOIN_WITHDRAWAL_WALLET,

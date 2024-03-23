@@ -6,6 +6,7 @@ const OkcoinAPI = require('../../api/okcoin');
 class OkcoinTumbler {
   /**
    * @param {OkcoinAPI} okcoinClient
+   * @param {NotificationService} notificationService
    * @param {number} minWithdrawalAmount
    * @param {number} maxWithdrawalAmount
    * @param {string} withdrawWallet
@@ -13,12 +14,14 @@ class OkcoinTumbler {
    */
   constructor(
     okcoinClient,
+    notificationService,
     minWithdrawalAmount,
     maxWithdrawalAmount,
     withdrawWallet,
     withdrawCurrency,
   ) {
     this.okcoinClient = okcoinClient;
+    this.notificationService = notificationService;
     this.minWithdrawalAmount = minWithdrawalAmount;
     this.maxWithdrawalAmount = maxWithdrawalAmount;
     this.withdrawWallet = withdrawWallet;

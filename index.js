@@ -24,11 +24,15 @@ const {
   WITHDRAW_FUNDS_INTERVAL_MIN,
   EXTRACT_SATS_INTERVAL_MIN,
   SLACK_WEB_HOOK,
-  MIN_OUTPUT_SIZE,
+  TELEGRAM_BOT_TOKEN,
+  TELEGRAM_CHAT_ID,
   CUSTOM_SPECIAL_SAT_WALLETS,
   ORDINALSBOT_API_KEY,
   INCLUDE_SATRIBUTES,
 } = require('./conf/satminer');
+const NotificationService = require('./model/notifications/notificationService');
+const SlackNotifications = require('./model/notifications/slack');
+const TelegramNotifications = require('./model/notifications/telegram');
 
 const bitcoinClient = new BitcoinClient({
   host: BITCOIN_RPC_HOST,
@@ -46,10 +50,17 @@ const satscanner = new Satscanner(ORDINALSBOT_API_KEY, "live");
 const satextractor = new Satextractor(ORDINALSBOT_API_KEY, "live");
 const mempool = new Mempool(ORDINALSBOT_API_KEY, "live");
 
-let slackWebHook = null;
+// initialize notifications
+let notifications = new NotificationService();
 if (SLACK_WEB_HOOK) {
   console.log('enabling slack webhook notifications');
-  slackWebHook = new IncomingWebhook(SLACK_WEB_HOOK);
+  const slackWebHook = new SlackNotifications(SLACK_WEB_HOOK);
+  notifications.addNotifier(slackWebHook);
+}
+if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID) {
+  console.log('enabling telegram notifications');
+  const telegramNotifier = new TelegramNotifications(TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID);
+  notifications.addNotifier(telegramNotifier);
 }
 
 const {
@@ -77,7 +88,7 @@ const satminer = new Satminer(
   ACTIVE_EXCHANGE === 'kraken' ? KRAKEN_DEPOSIT_WALLET : OKCOIN_DEPOSIT_WALLET,
   sweepConfirmationTargetBlocks,
   MIN_DEPOSIT_AMOUNT,
-  slackWebHook,
+  notifications,
   INCLUDE_SATRIBUTES,
   CUSTOM_SPECIAL_SAT_WALLETS,
 );

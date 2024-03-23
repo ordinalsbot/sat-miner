@@ -4,6 +4,7 @@ const Satminer = require('../model/satminer');
 const { Satscanner, Satextractor } = require('ordinalsbot');
 const Wallet = require('../model/wallet');
 const MempoolApi = require('../api/mempool');
+const NotificationService = require('../model/notifications/notificationService');
 
 describe('Satminer', () => {
   const addressReceiveRareSats = 'receive_rare_sats';
@@ -13,14 +14,16 @@ describe('Satminer', () => {
   let satextractor = new Satextractor();
   let mempoolApi = new MempoolApi();
   let wallet = new Wallet();
-  let satminer = new Satminer(wallet, satscanner, satextractor, tumblerAddress, addressReceiveRareSats, addressReceiveCommonSats);
+  let notifications = new NotificationService();
+  let satminer = new Satminer(wallet, satscanner, satextractor, tumblerAddress, addressReceiveRareSats, addressReceiveCommonSats, null, null, notifications);
 
   beforeEach(() => {
     mempoolApi = new MempoolApi();
     wallet = new Wallet(mempoolApi);
     satscanner = new Satscanner();
     satextractor = new Satextractor();
-    satminer = new Satminer(wallet, satscanner, satextractor, tumblerAddress, addressReceiveRareSats, addressReceiveCommonSats);
+    notifications = new NotificationService();
+    satminer = new Satminer(wallet, satscanner, satextractor, tumblerAddress, addressReceiveRareSats, addressReceiveCommonSats, null, null, notifications);
   });
 
   describe('#extractSatsAndRotateFunds()', () => {
@@ -54,6 +57,7 @@ describe('Satminer', () => {
       const sendTxSpy = sinon.stub(wallet, 'sendRawTransaction').resolves(txid);
       const decodeRawTxSpy = sinon.stub(wallet, 'decodeRawTransaction').resolves({ vout: [{ scriptPubKey: { address: addressReceiveCommonSats } }, { scriptPubKey: { address: addressReceiveRareSats } }] });
       const signRawTxSpy = sinon.stub(wallet, 'signRawTransaction').resolves('signedtx');
+      const notificationSpy = sinon.stub(notifications, 'sendMessage').resolves(true);
 
       const res = await satminer.extractSatsAndRotateFunds();
 
@@ -71,6 +75,7 @@ describe('Satminer', () => {
       assert(signRawTxSpy.calledWith(mockSatExtractorApiResponse.tx));
       assert(sendTxSpy.calledOnce);
       assert(sendTxSpy.calledWith('signedtx'));
+      assert(notificationSpy.calledWith('found and extracted special ranges in sometxid\n1 x pizza'));
     });
 
     it('should filter out pizza ranges', async () => {
@@ -332,7 +337,7 @@ describe('Satminer', () => {
       const decodeRawTxSpy = sinon.stub(wallet, 'decodeRawTransaction').resolves({ vout: [{ scriptPubKey: { address: tumblerAddress } }] });
       const signRawTxSpy = sinon.stub(wallet, 'signRawTransaction').resolves('signedtx');
 
-      const spySlack = sinon.spy(satminer, 'sendSlackMessage');
+      const spySlack = sinon.spy(notifications, 'sendMessage');
 
       const res = await satminer.extractSatsAndRotateFunds();
 

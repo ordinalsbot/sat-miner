@@ -2,10 +2,9 @@ const axios = require('axios');
 const crypto = require('crypto');
 
 class CoinbaseAPI {
-    constructor(apiKey, apiSecret, apiPassphrase) {
+    constructor(apiKey, apiSecret) {
         this.apiKey = apiKey;
         this.apiSecret = apiSecret;
-        this.apiPassphrase = apiPassphrase;
         this.baseURL = 'https://api.coinbase.com';
     }
 
@@ -42,48 +41,43 @@ class CoinbaseAPI {
     }
 
     async signMessage(method, endpoint, body) {
-        const cb_access_timestamp = Date.now() / 1000; // in ms
-
-        // create the prehash string by concatenating required parts
-        const message = `${cb_access_timestamp}${method}${endpoint}${JSON.stringify(body)}`;
-
-        // decode the base64 secret
-        const key = Buffer.from(this.apiSecret, 'base64');
-
-        // create a sha256 hmac with the secret
-        const hmac = crypto.createHmac('sha256', key);
-
-        // sign the required message with the hmac and base64 encode the result
-        const cb_access_sign = hmac.update(message).digest('base64');
-
+        const timestamp = Math.floor(Date.now() / 1000); // Unix time in seconds
+        const message = `${timestamp}${method}${endpoint}${JSON.stringify(body)}`;
+        const signature = crypto.createHmac('sha256', this.apiSecret).update(message).digest('hex');
         return {
             'CB-ACCESS-KEY': this.apiKey,
-            'CB-ACCESS-SIGN': cb_access_sign,
-            'CB-ACCESS-TIMESTAMP': cb_access_timestamp,
-            'CB-ACCESS-PASSPHRASE': this.apiPassphrase,
+            'CB-ACCESS-SIGN': signature,
+            'CB-ACCESS-TIMESTAMP': timestamp,
             'Content-Type': 'application/json',
         };
     }
 
     async getSystemStatus() {
-        return this.getPublicEndpoint('/system/status');
+        throw new Error('Not implemented');
+    }
+
+    async getAccountId() {
+        const accounts = await this.getAuthEndpoint('/v2/accounts/BTC');
+        return accounts.data.data.id;
     }
 
     async getAccountBalance() {
-        return this.getAuthEndpoint('/accounts');
+        const accountId = await this.getAccountId();
+        return this.getAuthEndpoint(`/v2/accounts/${accountId}`);
     }
 
     async withdrawFunds(amount, currency, address) {
+        const accountId = await this.getAccountId();
         const body = {
             amount,
             currency,
             crypto_address: address,
         };
-        return this.postAuthEndpoint('/withdrawals/crypto', body);
+        return this.postAuthEndpoint(`/v2/accounts/${accountId}/transactions`, body);
     }
 
     async getServerTime() {
-        return this.getPublicEndpoint('/time');
+        return this.getPublicEndpoint('/v2/time');
     }
 }
 

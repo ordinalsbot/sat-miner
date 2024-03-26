@@ -134,7 +134,7 @@ describe('Satminer', () => {
       assert(signRawTxSpy.calledWith(mockSatExtractorApiResponse.tx));
       assert(sendTxSpy.calledOnce);
       assert(sendTxSpy.calledWith('signedtx'));
-      assert(notificationSpy.calledTwice);
+      assert(notificationSpy.calledThrice);
     });
 
     it('should send common sats to exchange wallet', async () => {
@@ -197,7 +197,7 @@ describe('Satminer', () => {
       assert(signRawTxSpy.calledWith(mockSatExtractorApiResponse.tx));
       assert(sendTxSpy.calledOnce);
       assert(sendTxSpy.calledWith('signedtx'));
-      assert(notificationSpy.calledTwice);
+      assert(notificationSpy.calledThrice);
     });
 
     it('should throw if common sats sent to exchange wallet if below min deposit amount', async () => {
@@ -260,7 +260,7 @@ describe('Satminer', () => {
       assert(signRawTxSpy.notCalled);
       assert(sendTxSpy.notCalled);
       assert(sendTxSpy.notCalled);
-      assert(notificationSpy.calledTwice);
+      assert(notificationSpy.calledThrice);
     });
 
     it('should throw if any funds go to non-user controlled addresses', async () => {
@@ -324,7 +324,7 @@ describe('Satminer', () => {
       assert(signRawTxSpy.notCalled);
       assert(sendTxSpy.notCalled);
       assert(sendTxSpy.notCalled);
-      assert(notificationSpy.calledTwice);
+      assert(notificationSpy.calledThrice);
     });
 
     it('should finish quietly when address is empty', async () => {
@@ -353,7 +353,7 @@ describe('Satminer', () => {
       const res = await satminer.extractSatsAndRotateFunds();
 
       assert(stubExtract.calledOnce);
-      assert(spySlack.notCalled);
+      assert(spySlack.calledTwice);
       assert(decodeRawTxSpy.notCalled);
       assert(signRawTxSpy.notCalled);
       assert(sendTxSpy.notCalled);
@@ -399,7 +399,7 @@ describe('Satminer', () => {
       );
 
       await assert.rejects(async () => satminer.extractSatsAndRotateFunds(), { message: 'fee higher than max allowed 1000' });
-      assert(notificationSpy.calledOnce);
+      assert(notificationSpy.calledTwice);
     });
   });
 

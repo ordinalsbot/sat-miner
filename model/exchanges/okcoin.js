@@ -6,6 +6,7 @@ const OkcoinAPI = require('../../api/okcoin');
 class OkcoinTumbler {
   /**
    * @param {OkcoinAPI} okcoinClient
+   * @param {NotificationService} notificationService
    * @param {number} minWithdrawalAmount
    * @param {number} maxWithdrawalAmount
    * @param {string} withdrawWallet
@@ -13,12 +14,14 @@ class OkcoinTumbler {
    */
   constructor(
     okcoinClient,
+    notificationService,
     minWithdrawalAmount,
     maxWithdrawalAmount,
     withdrawWallet,
     withdrawCurrency,
   ) {
     this.okcoinClient = okcoinClient;
+    this.notificationService = notificationService;
     this.minWithdrawalAmount = minWithdrawalAmount;
     this.maxWithdrawalAmount = maxWithdrawalAmount;
     this.withdrawWallet = withdrawWallet;
@@ -58,11 +61,13 @@ class OkcoinTumbler {
     console.log('response from okcoin', res);
 
     if (res.msg) {
+      this.notificationService.sendMessage('stopped: error calling okcoin api', 'verbose');
       console.error('error calling okcoin api', res.msg);
       return false;
     }
 
     console.log('successful withdrawal from okcoin');
+    this.notificationService.sendMessage(`successful withdrawal ${withdrawalAmount} ${this.withdrawCurrency} to wallet ${this.withdrawWallet}`, 'verbose');
     return true;
   };
 }

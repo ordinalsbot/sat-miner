@@ -2,6 +2,7 @@ const sinon = require('sinon');
 const assert = require('assert');
 const KrakenAPI = require('../api/kraken');
 const KrakenTumbler = require('../model/exchanges/kraken');
+const NotificationService = require('../model/notifications/notificationService');
 
 const getMockKrakenAPI = (accountBalance) => {
   const api = new KrakenAPI('', '');
@@ -24,10 +25,20 @@ const getMockKrakenAPI = (accountBalance) => {
 };
 
 describe('KrakenTumbler', () => {
+  let api = new KrakenAPI('', '');
+  let notificationService = new NotificationService();
+  let krakenTumbler = new KrakenTumbler(api, notificationService, 0.01, 1, 'test', 'XBT');
+
+  beforeEach(() => {
+    api = new KrakenAPI('', '');
+    notificationService = new NotificationService();
+    krakenTumbler = new KrakenTumbler(api, notificationService, 0.01, 1, 'test', 'XBT');
+  });
+
   describe('#withdrawAvailableFunds()', () => {
     it('should not withdraw funds if balance is too low', async () => {
       const { api } = getMockKrakenAPI(0.001);
-      const krakenTumbler = new KrakenTumbler(api, 0.01, 1, 'test', 'XBT');
+      krakenTumbler = new KrakenTumbler(api, notificationService, 0.01, 1, 'test', 'XBT');
 
       const res = await krakenTumbler.withdrawAvailableFunds();
 
@@ -42,7 +53,7 @@ describe('KrakenTumbler', () => {
       const maxWithdrawalAmount = 1;
       const { api, stubWithdrawFunds } = getMockKrakenAPI(accountBalance);
 
-      const krakenTumbler = new KrakenTumbler(api, minWithdrawalAmount, maxWithdrawalAmount, withdrawWalllet, withdrawCurrency);
+      krakenTumbler = new KrakenTumbler(api, notificationService, minWithdrawalAmount, maxWithdrawalAmount, withdrawWalllet, withdrawCurrency);
 
       const res = await krakenTumbler.withdrawAvailableFunds();
 
@@ -58,7 +69,7 @@ describe('KrakenTumbler', () => {
       const maxWithdrawalAmount = 1;
       const { api, stubWithdrawFunds } = getMockKrakenAPI(accountBalance);
 
-      const krakenTumbler = new KrakenTumbler(api, minWithdrawalAmount, maxWithdrawalAmount, withdrawWalllet, withdrawCurrency);
+      krakenTumbler = new KrakenTumbler(api, notificationService, minWithdrawalAmount, maxWithdrawalAmount, withdrawWalllet, withdrawCurrency);
       const res = await krakenTumbler.withdrawAvailableFunds();
 
       assert.ok(res);

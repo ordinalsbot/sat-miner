@@ -125,6 +125,7 @@ class Satminer {
 
   extractSatsAndRotateFunds = async () => {
     console.log('scanning for rare sats...');
+    this.notificationService.sendMessage(`starting a new cycle.`, 'verbose');
 
     const fees = await this.wallet.estimateFee();
     const { fastestFee } = fees;
@@ -150,6 +151,7 @@ class Satminer {
     const { specialRanges, tx, message } = satextractorRes;
 
     if (message && message.includes('Address is empty')) {
+      this.notificationService.sendMessage(`${this.tumblerAddress} is currently empty.`, 'verbose');
       console.log('tumbler wallet is empty');
       return false;
     } else if (specialRanges.length === 0) {

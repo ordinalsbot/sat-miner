@@ -4,13 +4,16 @@ const { Satscanner, Satextractor, Mempool } = require('ordinalsbot');
 const Satminer = require('./model/satminer');
 const KrakenAPI = require('./api/kraken');
 const OkcoinAPI = require('./api/okcoin');
+const CoinbaseAPI = require('./api/coinbase');
 const MempoolApi = require('./api/mempool');
 const KrakenTumbler = require('./model/exchanges/kraken');
 const OkcoinTumbler = require('./model/exchanges/okcoin');
+const CoinbaseTumbler = require('./model/exchanges/coinbase');
 const Wallet = require('./model/wallet');
 const { loadBitcoinWallet } = require('./utils/funcs');
 const {
   EXCHANGE_DATA,
+  EXCHANGE_DEPOSIT_WALLET,
   MAX_WITHDRAWAL_AMOUNT,
   MIN_WITHDRAWAL_AMOUNT,
   MIN_DEPOSIT_AMOUNT,
@@ -70,13 +73,15 @@ const {
   KRAKEN_API_SECRET,
   KRAKEN_WITHDRAWAL_WALLET,
   KRAKEN_WITHDRAW_CURRENCY,
-  KRAKEN_DEPOSIT_WALLET,
   OKCOIN_API_KEY,
   OKCOIN_API_SECRET,
   OKCOIN_API_PASSPHRASE,
   OKCOIN_WITHDRAWAL_WALLET,
   OKCOIN_WITHDRAW_CURRENCY,
-  OKCOIN_DEPOSIT_WALLET,
+  COINBASE_API_KEY,
+  COINBASE_API_SECRET,
+  COINBASE_WITHDRAWAL_WALLET,
+  COINBASE_WITHDRAW_CURRENCY,
 } = EXCHANGE_DATA;
 
 const sweepConfirmationTargetBlocks = 1;
@@ -86,7 +91,7 @@ const satminer = new Satminer(
   satextractor,
   TUMBLER_ADDRESS,
   INVENTORY_WALLET,
-  ACTIVE_EXCHANGE === 'kraken' ? KRAKEN_DEPOSIT_WALLET : OKCOIN_DEPOSIT_WALLET,
+  EXCHANGE_DEPOSIT_WALLET,
   sweepConfirmationTargetBlocks,
   MIN_DEPOSIT_AMOUNT,
   notifications,
@@ -116,6 +121,16 @@ switch (ACTIVE_EXCHANGE) {
             MAX_WITHDRAWAL_AMOUNT,
             OKCOIN_WITHDRAWAL_WALLET,
             OKCOIN_WITHDRAW_CURRENCY,
+        );
+        break;
+    case 'coinbase':
+        const coinbaseAPI = new CoinbaseAPI(COINBASE_API_KEY, COINBASE_API_SECRET);
+        exchangeTumbler = new CoinbaseTumbler(
+            coinbaseAPI,
+            MIN_WITHDRAWAL_AMOUNT,
+            MAX_WITHDRAWAL_AMOUNT,
+            COINBASE_WITHDRAWAL_WALLET,
+            COINBASE_WITHDRAW_CURRENCY,
         );
         break;
     default:

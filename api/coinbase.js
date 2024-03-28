@@ -6,6 +6,7 @@ class CoinbaseAPI {
         this.apiKey = apiKey;
         this.apiSecret = apiSecret;
         this.baseURL = 'https://api.coinbase.com';
+        this.accountId = null;
     }
 
     async getPublicEndpoint(endpoint) {
@@ -31,7 +32,7 @@ class CoinbaseAPI {
 
     async postAuthEndpoint(endpoint, body) {
         try {
-            const headers = await this.signMessage('POST', endpoint, body);
+            const headers = await this.signMessage('POST', endpoint, JSON.stringify(body));
             const response = await axios.post(`${this.baseURL}${endpoint}`, body, { headers });
             return response.data;
         } catch (error) {
@@ -40,14 +41,15 @@ class CoinbaseAPI {
         }
     }
 
-    async signMessage(method, endpoint, body) {
+    async signMessage(method, endpoint, body = '') {
         const timestamp = Math.floor(Date.now() / 1000); // Unix time in seconds
-        const message = `${timestamp}${method}${endpoint}${JSON.stringify(body)}`;
+        const message = `${timestamp}${method}${endpoint}${body}`;
         const signature = crypto.createHmac('sha256', this.apiSecret).update(message).digest('hex');
         return {
             'CB-ACCESS-KEY': this.apiKey,
             'CB-ACCESS-SIGN': signature,
-            'CB-ACCESS-TIMESTAMP': timestamp,
+            'CB-ACCESS-TIMESTAMP': `${timestamp}`,
+            'CB-VERSION': '2024-03-22',
             'Content-Type': 'application/json',
         };
     }
@@ -58,22 +60,28 @@ class CoinbaseAPI {
 
     async getAccountId() {
         const accounts = await this.getAuthEndpoint('/v2/accounts/BTC');
-        return accounts.data.data.id;
+        return accounts.data.id;
     }
 
     async getAccountBalance() {
-        const accountId = await this.getAccountId();
-        return this.getAuthEndpoint(`/v2/accounts/${accountId}`);
+        if (!this.accountId) {
+            this.accountId = await this.getAccountId();
+        }
+        return this.getAuthEndpoint(`/v2/accounts/${this.accountId}`);
     }
 
     async withdrawFunds(amount, currency, address) {
-        const accountId = await this.getAccountId();
+        if (!this.accountId) {
+            this.accountId = await this.getAccountId();
+        }
         const body = {
+            type: 'send',
             amount,
             currency,
-            crypto_address: address,
+            to: address,
+            to_financial_institution: false,
         };
-        return this.postAuthEndpoint(`/v2/accounts/${accountId}/transactions`, body);
+        return this.postAuthEndpoint(`/v2/accounts/${this.accountId}/transactions`, body);
     }
 
     async getServerTime() {

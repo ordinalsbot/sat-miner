@@ -26,7 +26,9 @@ class CoinbaseTumbler {
   }
 
   withdrawAvailableFunds = async () => {
-    const btcBalance = balance.data.find((b) => b.ccy === 'BTC').availBal;
+    const balance = await this.coinbaseClient.getAccountBalance();
+
+    const btcBalance = balance.data.balance.amount;
     if (btcBalance < this.minWithdrawalAmount) {
       console.log(`insufficient funds to withdraw, account balance ${btcBalance}`);
       return false;
@@ -36,11 +38,8 @@ class CoinbaseTumbler {
     if (btcBalance > this.maxWithdrawalAmount) {
       withdrawalAmount = this.maxWithdrawalAmount;
     }
-
-    const withdrawalFees = await this.coinbaseClient.getWithdrawalFee(this.withdrawCurrency);
-    let btcFee = withdrawalFees.data.find((f) => f.chain === 'BTC-Bitcoin').maxFee;
-    btcFee = parseFloat(btcFee);
-    withdrawalAmount -= btcFee;
+    // deduct some random fee
+    withdrawalAmount -= 0.001;
     withdrawalAmount = Number(withdrawalAmount).toFixed(8);
 
     console.log(
@@ -48,15 +47,13 @@ class CoinbaseTumbler {
     );
 
     const res = await this.coinbaseClient.withdrawFunds(
+      `${withdrawalAmount}`,
       this.withdrawCurrency,
       this.withdrawWallet,
-      withdrawalAmount,
-      btcFee,
     );
-    console.log('response from coinbase', res);
 
-    if (res.msg) {
-      console.error('error calling coinbase api', res.msg);
+    if (!res.data?.id) {
+      console.error('error calling coinbase api', res);
       return false;
     }
 

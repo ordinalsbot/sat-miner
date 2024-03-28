@@ -1,4 +1,5 @@
 const OkcoinAPI = require('../../api/okcoin');
+const NotificationService = require('../notifications/notificationService');
 
 /**
  * Rotates funds from a Okcoin account

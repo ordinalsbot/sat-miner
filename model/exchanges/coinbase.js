@@ -1,4 +1,5 @@
 const CoinbaseAPI = require('../../api/coinbase');
+const NotificationService = require('../notifications/notificationService');
 
 /**
  * Rotates funds from a Coinbase account
@@ -6,6 +7,7 @@ const CoinbaseAPI = require('../../api/coinbase');
 class CoinbaseTumbler {
   /**
    * @param {CoinbaseAPI} coinbaseClient
+   * @param {NotificationService} notificationService
    * @param {number} minWithdrawalAmount
    * @param {number} maxWithdrawalAmount
    * @param {string} withdrawWallet
@@ -13,12 +15,14 @@ class CoinbaseTumbler {
    */
   constructor(
     coinbaseClient,
+    notificationService,
     minWithdrawalAmount,
     maxWithdrawalAmount,
     withdrawWallet,
     withdrawCurrency,
   ) {
     this.coinbaseClient = coinbaseClient;
+    this.notificationService = notificationService;
     this.minWithdrawalAmount = minWithdrawalAmount;
     this.maxWithdrawalAmount = maxWithdrawalAmount;
     this.withdrawWallet = withdrawWallet;
@@ -53,11 +57,13 @@ class CoinbaseTumbler {
     );
 
     if (!res.data?.id) {
+      this.notificationService.sendMessage('stopped: error calling coinbase api', 'verbose');
       console.error('error calling coinbase api', res);
       return false;
     }
 
     console.log('successful withdrawal from coinbase');
+    this.notificationService.sendMessage(`successful withdrawal ${withdrawalAmount} ${this.withdrawCurrency} to wallet ${this.withdrawWallet}`, 'verbose');
     return true;
   };
 }

@@ -127,6 +127,7 @@ switch (ACTIVE_EXCHANGE) {
         const coinbaseAPI = new CoinbaseAPI(COINBASE_API_KEY, COINBASE_API_SECRET);
         exchangeTumbler = new CoinbaseTumbler(
             coinbaseAPI,
+            notifications,
             MIN_WITHDRAWAL_AMOUNT,
             MAX_WITHDRAWAL_AMOUNT,
             COINBASE_WITHDRAWAL_WALLET,
